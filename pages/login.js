@@ -1,4 +1,5 @@
 import { useState } from "react";
+import axios from "axios";
 import {
   FormControl,
   FormLabel,
@@ -9,13 +10,19 @@ import {
   Text,
 } from '@chakra-ui/react';
 
-export default function login() {
+export default function Login() {
   const [user, setUser] = useState('');
   const [password, setPassword] = useState('');
 
+  const handleLogin = () => {
+    console.log("entrou ");
+    // Aqui você pode fazer a requisição HTTP com axios para o endpoint de login
+    // e lidar com a resposta do servidor.
+  }
+  
   const handleSubmit = (event) => {
     event.preventDefault();
-    // handle login logic here
+    handleLogin();
   };
 
   return (
@@ -49,4 +56,4 @@ export default function login() {
       </form>
     </VStack>
   );
-}
+} 
