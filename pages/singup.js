@@ -1,4 +1,5 @@
 import { Button, FormControl, FormLabel, Heading, Input, Select, Text, VStack } from "@chakra-ui/react";
+import axios from "axios";
 import { useState } from "react";
 
 
@@ -6,7 +7,6 @@ import { useState } from "react";
 export default function singup() {
   const [user, setUser] = useState("")
   const [password, setPassword] = useState("")
-  
 
   return (
     <VStack p={10} spacing={8}>
@@ -40,7 +40,7 @@ export default function singup() {
             <option value="option2">False</option>
           </Select>
         </FormControl>
-        <Button type="submit" colorScheme="blue" >
+        <Button type="submit" colorScheme="blue" onClick={login}>
           Sing Up
         </Button>
       </form>
