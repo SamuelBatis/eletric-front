@@ -1,5 +1,6 @@
 import { useState } from "react";
-import axios from "axios";
+import { useRouter } from "next/router";
+import api from "@/services/api";
 import {
   FormControl,
   FormLabel,
@@ -8,21 +9,24 @@ import {
   VStack,
   Heading,
   Text,
-} from '@chakra-ui/react';
+} from "@chakra-ui/react";
 
 export default function Login() {
-  const [user, setUser] = useState('');
-  const [password, setPassword] = useState('');
+  const [user, setUser] = useState("");
+  const [password, setPassword] = useState("");
+  const router = useRouter();
 
-  const handleLogin = () => {
-    console.log("entrou ");
-    // Aqui você pode fazer a requisição HTTP com axios para o endpoint de login
-    // e lidar com a resposta do servidor.
-  }
-  
-  const handleSubmit = (event) => {
-    event.preventDefault();
-    handleLogin();
+  const handleSubmit = () => {
+    api
+      .post("/login", { username: user, password })
+      .then((response) => {
+        const { token } = response.data;
+        localStorage.setItem("token", token);
+        router.push("/");
+      })
+      .catch((error) => {
+        console.error(error);
+      });
   };
 
   return (
@@ -50,10 +54,10 @@ export default function Login() {
             onChange={(event) => setPassword(event.target.value)}
           />
         </FormControl>
-        <Button type="submit" colorScheme="blue">
+        <Button colorScheme="blue" onClick={handleSubmit}>
           Log in
         </Button>
       </form>
     </VStack>
   );
-} 
+}
