@@ -1,54 +1,36 @@
-/*import { useState } from "react";
-import { Box, Flex, IconButton, useDisclosure } from "@chakra-ui/react";
-import { HamburgerIcon, CloseIcon } from "@chakra-ui/icons";
+import { Box, Flex, Spacer, Stack, Text } from "@chakra-ui/react";
+import Link from "next/link";
 
 const Header = () => {
-  const { isOpen, onOpen, onClose } = useDisclosure();
-  const [mobileNav, setMobileNav] = useState(false);
-
   return (
-    <Flex
-      as="header"
-      align="center"
-      justify="space-between"
-      wrap="wrap"
-      padding="1.5rem"
-      bg="gray.800"
-      color="white"
-    >
-      <Box>
-        <h1>Meu site</h1>
-      </Box>
-      <Box display={{ base: "block", md: "none" }}>
-        <IconButton
-          onClick={() => setMobileNav(!mobileNav)}
-          icon={mobileNav ? <CloseIcon /> : <HamburgerIcon />}
-          variant="ghost"
-          aria-label="Menu"
-        />
-      </Box>
-      <Box
-        display={{ base: mobileNav ? "block" : "none", md: "flex" }}
-        width={{ base: "full", md: "auto" }}
-        alignItems="center"
-        flexGrow={1}
-      >
-        <Flex
-          direction={{ base: "column", md: "row" }}
-          align={{ base: "center", md: "center" }}
-          justify={{ base: "center", md: "flex-end" }}
-          pt={{ base: 4, md: 0 }}
-        >
-          <Box px={2}>Home</Box>
-          <Box px={2}>Sobre</Box>
-          <Box px={2}>Contato</Box>
-        </Flex>
-      </Box>
-    </Flex>
+    <Box bg="gray.900" py={4}>
+      <Flex alignItems="center" justifyContent="center">
+        <Stack direction="row" spacing={4} alignItems="center">
+          <Link href="/" passHref>
+            <Text as="a" fontWeight="bold" fontSize="2xl" color="white">
+              Eletric
+            </Text>
+          </Link>
+          <Link href="/about" passHref>
+            <Text as="a" fontSize="lg" color="white">
+              About
+            </Text>
+          </Link>
+          <Link href="/contact" passHref>
+            <Text as="a" fontSize="lg" color="white">
+              Contact
+            </Text>
+          </Link>
+        </Stack>
+        <Spacer />
+        <Box>
+          <Text fontSize="lg" fontWeight="bold" color="white">
+            User Name
+          </Text>
+        </Box>
+      </Flex>
+    </Box>
   );
 };
 
-export default Header;*/
-export default function Header() {
-  return <h1>Header</h1>
-}
+export default Header;
