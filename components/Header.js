@@ -1,4 +1,4 @@
-import { useState } from "react";
+/*import { useState } from "react";
 import { Box, Flex, IconButton, useDisclosure } from "@chakra-ui/react";
 import { HamburgerIcon, CloseIcon } from "@chakra-ui/icons";
 
@@ -48,4 +48,7 @@ const Header = () => {
   );
 };
 
-export default Header;
+export default Header;*/
+export default function Header() {
+  return <h1>Header</h1>
+}
