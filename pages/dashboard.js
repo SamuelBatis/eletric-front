@@ -11,53 +11,21 @@ import {
   Heading,
   Radio,
   RadioGroup,
+  RangeSlider,
+  RangeSliderFilledTrack,
+  RangeSliderThumb,
+  RangeSliderTrack,
+  Slider,
+  SliderFilledTrack,
+  SliderThumb,
+  SliderTrack,
   Stack,
   Text,
 } from "@chakra-ui/react";
 import BarChartComponent from "@/components/BarChartComponent";
 import CardCarousel from "@/components/CardsCarousel";
-
-const myCards = [
-  {
-    id: 1,
-    content: (
-      <Box p={4}>
-        <Heading as="h3" size="md" mb={2}>
-          Card 1
-        </Heading>
-        <Text>
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-        </Text>
-      </Box>
-    )
-  },
-  {
-    id: 2,
-    content: (
-      <Box p={4}>
-        <Heading as="h3" size="md" mb={2}>
-          Card 2
-        </Heading>
-        <Text>
-          Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
-        </Text>
-      </Box>
-    )
-  },
-  {
-    id: 3,
-    content: (
-      <Box p={4}>
-        <Heading as="h3" size="md" mb={2}>
-          Card 3
-        </Heading>
-        <Text>
-          Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
-        </Text>
-      </Box>
-    )
-  }
-];
+import TwoBallsSlider from "@/components/TwoBallsSlider";
+//import Slider from "react-slick";
 
 
 const getUserData = async () => {
@@ -69,9 +37,18 @@ const getUserData = async () => {
   }
 };
 
-getUserData();
 export default function Dashboard() {
+
+  /*useEffect(() => {
+    const reponse = getUserData();
+  }, [])*/
+
   const [line, setLine] = useState(true);
+  const [values, setValues] = useState([10, 50]);
+  const handleChange = (newValues) => {
+    setValues(newValues);
+  };
+
 
   const changeChart = () => {
     setLine(!line);
@@ -93,23 +70,54 @@ export default function Dashboard() {
       <Box mt="9">
         <Card>
           <CardHeader>
-            <RadioGroup>
-              <Stack direction="row">
-                <Radio isChecked={!line} onChange={() => setLine(!line)}>
-                  Bar
-                </Radio>
-                <Radio isChecked={line} onChange={() => setLine(!line)}>
-                  Line
-                </Radio>
-              </Stack>
-            </RadioGroup>
+            <Flex justifyContent="space-between" alignItems="center">
+              <RadioGroup>
+                <Stack direction="row">
+                  <Radio isChecked={!line} onChange={() => setLine(!line)}>
+                    Bar
+                  </Radio>
+                  <Radio isChecked={line} onChange={() => setLine(!line)}>
+                    Line
+                  </Radio>
+                </Stack>
+              </RadioGroup>
+              <RangeSlider aria-label={['min', 'max']} defaultValue={[10, 30]} w={300}>
+                <RangeSliderTrack>
+                  <RangeSliderFilledTrack />
+                </RangeSliderTrack>
+                <RangeSliderThumb index={0} />
+                <RangeSliderThumb index={1} />
+              </RangeSlider>
+            </Flex>
           </CardHeader>
+
           <CardBody>
             {line === true ? <LineChartComponent /> : <BarChartComponent />}
           </CardBody>
         </Card>
       </Box>
-      <CardCarousel cards={myCards}/>
+
+      <Box mt="9">
+        <Flex direction={{ base: "column", md: "row" }} gap={6}>
+          <Card flex="1">
+            <CardHeader>
+              Simulação
+            </CardHeader>
+            <CardBody>
+              Valor: 4300
+            </CardBody>
+          </Card>
+          <Card flex="1">
+            <CardHeader>
+              Real
+            </CardHeader>
+            <CardBody>
+              Valor: 3490
+            </CardBody>
+          </Card>
+        </Flex>
+      </Box>
+
     </>
   );
 }

@@ -22,7 +22,7 @@ export default function Login() {
       .then((response) => {
         const { token } = response.data;
         console.log("new session " + response.data.access_token)
-        localStorage.setItem("token", response.data.access_token);
+        sessionStorage.setItem("token", response.data.access_token);
         router.push("/dashboard");
       })
       .catch((error) => {
