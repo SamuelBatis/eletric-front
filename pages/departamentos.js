@@ -22,8 +22,12 @@ import { AddIcon, DeleteIcon } from "@chakra-ui/icons";
 import {
   fetchDepartments,
   createDepartment,
+  findUser,
 } from "../services/api";
 import Header from "@/components/Header";
+
+
+
 
 
 /*const departmentsData = [
@@ -72,8 +76,19 @@ export default function Departamentos() {
   const [newMachineUsageTime, setNewMachineUsageTime] = useState("");
   const [newDepartmentName, setNewDepartmentName] = useState("");
   const [departments, setDepartments] = useState([]);
+  const [userData, setUserData] = useState()
+  console.log("dados ", userData)
 
   useEffect(() => {
+    const getUserInfos = async () => {
+      try {
+        const data = await findUser() 
+        setUserData(data)
+      } catch (error) {
+
+      }
+    }
+
     const getDepartments = async () => {
       try {
         const departmentsData = await fetchDepartments();
@@ -94,6 +109,7 @@ export default function Departamentos() {
     //getMachines();
 
     getDepartments();
+    getUserInfos();
   }, []);
 
 

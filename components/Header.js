@@ -1,7 +1,22 @@
 import { Box, Flex, Spacer, Stack, Text } from "@chakra-ui/react";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
 const Header = () => {
+  const [userData, setUserData] = useState();
+
+  useEffect(() => {
+    const getUserInfos = async () => {
+      try {
+        const data = await findUser() 
+        setUserData(data)
+      } catch (error) {
+
+      }
+    }
+    getUserInfos();
+  }, [])
+
   return (
     <Box bg="gray.900" py={4}>
       <Flex alignItems="center" justifyContent="center">
@@ -30,7 +45,7 @@ const Header = () => {
         <Spacer />
         <Box>
           <Text fontSize="lg" fontWeight="bold" color="white">
-            User Name
+
           </Text>
         </Box>
       </Flex>

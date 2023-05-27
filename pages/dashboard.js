@@ -1,5 +1,5 @@
 import Header from "@/components/Header";
-import api from "@/services/api";
+import api, { decodeToken } from "@/services/api";
 import { useEffect, useState } from "react";
 import LineChartComponent from "@/components/LineChartComponent";
 import {
@@ -45,10 +45,10 @@ export default function Dashboard() {
 
   const [line, setLine] = useState(true);
   const [values, setValues] = useState([10, 50]);
+  const [userName, setUserName] = useState("");
   const handleChange = (newValues) => {
     setValues(newValues);
   };
-
 
   const changeChart = () => {
     setLine(!line);
@@ -66,7 +66,7 @@ export default function Dashboard() {
 
   return (
     <>
-      <Header />
+      <Header  />
       <Box mt="9">
         <Card>
           <CardHeader>
