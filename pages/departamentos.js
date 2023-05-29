@@ -22,51 +22,14 @@ import { AddIcon, DeleteIcon } from "@chakra-ui/icons";
 import {
   fetchDepartments,
   createDepartment,
+  createMachine,
   findUser,
+  deleteMachine,
+  fetchMachines,
+  decodedToken,
+  deleteDepartment,
 } from "../services/api";
 import Header from "@/components/Header";
-
-
-
-
-
-/*const departmentsData = [
-  {
-    name: "Departamento 1",
-    machines: [
-      {
-        id: 1,
-        name: "Máquina A",
-        voltage: "220V",
-        usageTime: "8 horas",
-      },
-      {
-        id: 2,
-        name: "Máquina B",
-        voltage: "110V",
-        usageTime: "6 horas",
-      },
-    ],
-  },
-  {
-    name: "Departamento 2",
-    machines: [
-      {
-        id: 3,
-        name: "Máquina X",
-        voltage: "220V",
-        usageTime: "10 horas",
-      },
-      {
-        id: 4,
-        name: "Máquina Y",
-        voltage: "110V",
-        usageTime: "4 horas",
-      },
-    ],
-  },
-  // Adicione mais departamentos e máquinas conforme necessário
-];*/
 
 export default function Departamentos() {
   const [isMachineModalOpen, setMachineModalOpen] = useState(false);
@@ -74,60 +37,117 @@ export default function Departamentos() {
   const [newMachineName, setNewMachineName] = useState("");
   const [newMachineVoltage, setNewMachineVoltage] = useState("");
   const [newMachineUsageTime, setNewMachineUsageTime] = useState("");
+  const [newMachineTotalCost, setNewMachineTotalCost] = useState(""); // Adicionado novo estado
   const [newDepartmentName, setNewDepartmentName] = useState("");
   const [departments, setDepartments] = useState([]);
-  const [userData, setUserData] = useState()
-  console.log("dados ", userData)
+  const [userData, setUserData] = useState();
+  const [totalCostByDepartment, setTotalCostByDepartment] = useState([]);
+
 
   useEffect(() => {
     const getUserInfos = async () => {
       try {
-        const data = await findUser() 
-        setUserData(data)
+        const token = sessionStorage.getItem("token");
+        const userId = decodedToken(token);
+        const user = await findUser(userId);
+        setUserData(userId);
       } catch (error) {
-
+        // Handle error
       }
-    }
+    };
 
-    const getDepartments = async () => {
+    const fetchData = async () => {
       try {
         const departmentsData = await fetchDepartments();
-        setDepartments(departmentsData);
-      } catch (error) {
-        // Handle error fetching departments
-      }
-    };
-    const getMachines = async () => {
-      try {
         const machinesData = await fetchMachines();
-        setMachines(machinesData);
+
+        // Organizar as máquinas em seus respectivos departamentos
+        const departmentsWithMachines = departmentsData.map((department) => {
+          const machines = machinesData.filter(
+            (machine) => machine.idDepartamento === department.idDepartamento
+          );
+          const totalCost = machines.reduce(
+            (accumulator, machine) => accumulator + parseFloat(machine.custoTotal),
+            0
+          );
+          return {
+            ...department,
+            machines: machines,
+            totalCost: totalCost.toFixed(2),
+          };
+        });
+
+        setDepartments(departmentsWithMachines);
+
+        // Calcular os custos totais por departamento
+        const totalCostByDepartment = departmentsWithMachines.reduce(
+          (accumulator, department) => {
+            return {
+              ...accumulator,
+              [department.idDepartamento]: department.totalCost,
+            };
+          },
+          {}
+        );
+
+        setTotalCostByDepartment(totalCostByDepartment);
       } catch (error) {
-        // Handle error fetching machines
+        // Handle error fetching data
       }
     };
 
-    //getMachines();
 
-    getDepartments();
+    fetchData();
     getUserInfos();
   }, []);
 
+  const handleDeleteMachine = async (departmentIndex, machineId) => {
+    try {
+      await deleteMachine(machineId); // Chamada para a função deleteMachine da API
 
+      const departmentsData = await fetchDepartments();
+      const machinesData = await fetchMachines();
 
+      // Organizar as máquinas em seus respectivos departamentos
+      const departmentsWithMachines = departmentsData.map((department) => {
+        const machines = machinesData.filter(
+          (machine) => machine.idDepartamento === department.idDepartamento
+        );
+        // Somar os custos totais por máquina
+        const totalCost = machines.reduce((sum, machine) => sum + parseFloat(machine.custoTotal), 0);
+        return {
+          ...department,
+          machines: machines.map(machine => ({
+            ...machine,
+            custoTotal: parseFloat(machine.custoTotal).toFixed(2) // Formatar custo total com duas casas decimais
+          })),
+          totalCost: totalCost.toFixed(2), // Adicionar o custo total do departamento
+        };
+      });
+
+      setDepartments(departmentsWithMachines);
+    } catch (error) {
+      // Tratar erro de exclusão da máquina
+    }
+  };
 
   const handleAddMachine = async (departmentIndex) => {
-    const updatedDepartments = [...departments];
+    const department = departments[departmentIndex];
     const newMachine = {
-      id: Date.now(),
-      name: newMachineName,
-      voltage: newMachineVoltage,
-      usageTime: newMachineUsageTime,
+      nome: newMachineName,
+      power: Number(newMachineVoltage).toFixed(1),
+      tempoDeUso: Number(newMachineUsageTime).toFixed(1),
+      custoTotal: calculateTotalCost(newMachineVoltage, newMachineUsageTime),
+      idUsuarios: 1,
+      idDepartamento: department.idDepartamento,
     };
 
     try {
       await createMachine(newMachine);
-      updatedDepartments[departmentIndex].machines.push(newMachine);
-      setDepartments(updatedDepartments);
+      department.machines.push(newMachine);
+      // Atualizar o custo total do departamento
+      const totalCost = department.machines.reduce((sum, machine) => sum + parseFloat(machine.custoTotal), 0);
+      department.totalCost = totalCost.toFixed(2);
       setMachineModalOpen(false);
       setNewMachineName("");
       setNewMachineVoltage("");
@@ -136,21 +156,6 @@ export default function Departamentos() {
       // Handle error creating machine
     }
   };
-
-
-  const handleDeleteMachine = async (departmentIndex, machineId) => {
-    try {
-      await api.delete(`/machine/${machineId}`);
-      const updatedDepartments = [...departments];
-      const machines = updatedDepartments[departmentIndex].machines;
-      const updatedMachines = machines.filter((machine) => machine.id !== machineId);
-      updatedDepartments[departmentIndex].machines = updatedMachines;
-      setDepartments(updatedDepartments);
-    } catch (error) {
-      // Handle error deleting machine
-    }
-  };
-
 
   const handleAddDepartment = async () => {
     const newDepartment = {
@@ -162,11 +167,35 @@ export default function Departamentos() {
       setDepartments([...departments, newDepartment]);
       setDepartmentModalOpen(false);
       setNewDepartmentName("");
-      console.log("entrou")
     } catch (error) {
       // Handle error creating department
     }
   };
+
+  const handleDeleteDepartment = async (departmentId) => {
+    try {
+      await deleteDepartment(departmentId);
+      
+      const departmentsData = await fetchDepartments();
+      const machinesData = await fetchMachines();
+  
+      // Organize as máquinas em seus respectivos departamentos
+      const departmentsWithMachines = departmentsData.map((department) => {
+        const machines = machinesData.filter(
+          (machine) => machine.idDepartamento === department.idDepartamento
+        );
+        return {
+          ...department,
+          machines: machines,
+        };
+      });
+  
+      setDepartments(departmentsWithMachines);
+    } catch (error) {
+      // Trate o erro de exclusão do departamento
+    }
+  };
+
   const calculateTotalCost = (voltage, usageTime) => {
     // Suponha que o custo por minuto seja de R$ 0,10 para 110V e R$ 0,15 para 220V
     const costPerMinute = voltage === "110V" ? 0.10 : 0.15;
@@ -174,7 +203,6 @@ export default function Departamentos() {
     const totalCost = costPerMinute * minutes;
     return totalCost.toFixed(2); // Retorna o custo total formatado com duas casas decimais
   };
-
 
   return (
     <>
@@ -186,44 +214,55 @@ export default function Departamentos() {
 
         {departments.map((department, departmentIndex) => (
           <Box key={departmentIndex} p={4} borderWidth={1} borderRadius="md" mb={4}>
-            <Heading as="h2" size="md" mb={2}>
-              {department.nome}
-            </Heading>
+            <HStack justify="space-between">
+              <Heading as="h2" size="md" mb={2}>
+                {department.nome}
+              </Heading>
+              <IconButton
+                icon={<DeleteIcon />}
+                colorScheme="red"
+                variant="ghost"
+                onClick={() => handleDeleteDepartment(department.idDepartamento)}
+              />
+            </HStack>
             <Text>Máquinas:</Text>
             <HStack align="start" spacing={4} mt={2} flexWrap="wrap">
-              {/*department.machines.map((machine) => (
-              <Box
-                key={machine.id}
-                borderWidth={1}
-                borderRadius="md"
-                p={2}
-                display="flex"
-                alignItems="center"
-                justifyContent="space-between"
-              >
-                <VStack align="start" spacing={1}>
-                  <Text>
-                    <strong>Nome:</strong> {machine.name}
-                  </Text>
-                  <Text>
-                    <strong>Voltagem:</strong> {machine.voltage}
-                  </Text>
-                  <Text>
-                    <strong>Tempo de Uso:</strong> {machine.usageTime}
-                  </Text>
-                  <Text>
-                    <strong>Custo Total:</strong> {calculateTotalCost(machine.voltage, machine.usageTime)}
-                  </Text>
-                </VStack>
-                <IconButton
-                  icon={<DeleteIcon />}
-                  colorScheme="red"
-                  variant="ghost"
-                  onClick={() => handleDeleteMachine(departmentIndex, machine.id)}
-                />
-              </Box>
-            ))*/}
+              {department.machines.map((machine) => (
+                <Box
+                  key={machine.idMaquinas}
+                  borderWidth={1}
+                  borderRadius="md"
+                  p={2}
+                  display="flex"
+                  alignItems="center"
+                  justifyContent="space-between"
+                >
+                  <VStack align="start" spacing={1}>
+                    <Text>
+                      <strong>Nome:</strong> {machine.nome}
+                    </Text>
+                    <Text>
+                      <strong>Power:</strong> {machine.power}
+                    </Text>
+                    <Text>
+                      <strong>Tempo de Uso:</strong> {machine.tempoDeUso}
+                    </Text>
+                    <Text>
+                      <strong>Custo Total:</strong> {machine.custoTotal}
+                    </Text>
+                  </VStack>
+                  <IconButton
+                    icon={<DeleteIcon />}
+                    colorScheme="red"
+                    variant="ghost"
+                    onClick={() => handleDeleteMachine(departmentIndex, machine.idMaquinas)}
+                  />
+                </Box>
+              ))}
             </HStack>
+            <Text>
+              <strong>Custo Total do Departamento:</strong> {totalCostByDepartment[department.idDepartamento]}
+            </Text>
             <Button
               mt={4}
               colorScheme="blue"
@@ -232,6 +271,7 @@ export default function Departamentos() {
             >
               Adicionar Máquina
             </Button>
+
           </Box>
         ))}
 
@@ -263,7 +303,7 @@ export default function Departamentos() {
                 />
               </FormControl>
               <FormControl mt={4}>
-                <FormLabel>Voltagem</FormLabel>
+                <FormLabel>Power</FormLabel>
                 <Input
                   value={newMachineVoltage}
                   onChange={(e) => setNewMachineVoltage(e.target.value)}
@@ -281,7 +321,7 @@ export default function Departamentos() {
               <Button
                 colorScheme="blue"
                 mr={3}
-                onClick={() => handleAddMachine(0)} // Passe o índice do departamento correto
+                onClick={() => handleAddMachine(departments[0].idDepartamento)} // Passe o id do departamento correto
               >
                 Adicionar
               </Button>
@@ -321,7 +361,6 @@ export default function Departamentos() {
           </ModalContent>
         </Modal>
       </Box>
-
     </>
   );
 }

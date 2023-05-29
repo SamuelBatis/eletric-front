@@ -1,7 +1,9 @@
 import Header from "@/components/Header";
-import api, { decodeToken } from "@/services/api";
+import api, { decodeToken, fetchContasLuz, getAllSimulacoes } from "@/services/api";
 import { useEffect, useState } from "react";
 import LineChartComponent from "@/components/LineChartComponent";
+import { format } from "date-fns";
+
 import {
   Box,
   Card,
@@ -15,10 +17,6 @@ import {
   RangeSliderFilledTrack,
   RangeSliderThumb,
   RangeSliderTrack,
-  Slider,
-  SliderFilledTrack,
-  SliderThumb,
-  SliderTrack,
   Stack,
   Text,
 } from "@chakra-ui/react";
@@ -46,6 +44,56 @@ export default function Dashboard() {
   const [line, setLine] = useState(true);
   const [values, setValues] = useState([10, 50]);
   const [userName, setUserName] = useState("");
+  const [contasLuz, setContasLuz] = useState([]);
+  const [simulacao, setSimulacao] = useState([]);
+  const sortedData = contasLuz.sort((a, b) => new Date(a.data) - new Date(b.data));
+  const formattedData = sortedData.map((item) => ({
+    ...item,
+    data: format(new Date(item.data), "MMMM"),
+  }));
+  console.log("simulacao ", simulacao)
+
+  useEffect(() => {
+    loadContasLuz();
+    loadSimulacoes();
+  }, []);
+
+  const loadSimulacoes = async () => {
+    try {
+      const simulacoes = await getAllSimulacoes();
+      console.log("sim ", simulacoes)
+      const sortedSimulacoes = simulacoes.sort((a, b) => new Date(a.date) - new Date(b.date));
+      const summedSimulacoes = [];
+      let prevDate = null;
+      let sum = 0;
+      for (let i = 0; i < sortedSimulacoes.length; i++) {
+        const simulacao = sortedSimulacoes[i];
+        if (prevDate === null || simulacao.date === prevDate) {
+          sum += simulacao.valor;
+        } else {
+          summedSimulacoes.push({ data: prevDate, valor: sum });
+          sum = simulacao.valor;
+        }
+        prevDate = simulacao.date;
+      }
+      if (prevDate !== null) {
+        summedSimulacoes.push({ data: prevDate, valor: sum });
+      }
+      setSimulacao(summedSimulacoes);
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
+  const loadContasLuz = async () => {
+    try {
+      const contasLuzData = await fetchContasLuz();
+      setContasLuz(contasLuzData);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   const handleChange = (newValues) => {
     setValues(newValues);
   };
@@ -81,18 +129,11 @@ export default function Dashboard() {
                   </Radio>
                 </Stack>
               </RadioGroup>
-              <RangeSlider aria-label={['min', 'max']} defaultValue={[10, 30]} w={300}>
-                <RangeSliderTrack>
-                  <RangeSliderFilledTrack />
-                </RangeSliderTrack>
-                <RangeSliderThumb index={0} />
-                <RangeSliderThumb index={1} />
-              </RangeSlider>
             </Flex>
           </CardHeader>
 
           <CardBody>
-            {line === true ? <LineChartComponent /> : <BarChartComponent />}
+            {line === true ? <LineChartComponent data={formattedData} simulacao={simulacao}/> : <BarChartComponent data={formattedData} simulacao={simulacao} />}
           </CardBody>
         </Card>
       </Box>
@@ -104,7 +145,7 @@ export default function Dashboard() {
               Simulação
             </CardHeader>
             <CardBody>
-              Valor: 4300
+              Valor: {simulacao.length > 0 ? simulacao[simulacao.length - 1].valor : 0}
             </CardBody>
           </Card>
           <Card flex="1">
@@ -112,7 +153,7 @@ export default function Dashboard() {
               Real
             </CardHeader>
             <CardBody>
-              Valor: 3490
+              Valor: {sortedData.length > 0 ? sortedData[sortedData.length - 1].valor : 0}
             </CardBody>
           </Card>
         </Flex>
