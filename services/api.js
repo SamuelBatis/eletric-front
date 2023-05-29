@@ -73,6 +73,15 @@ export const updateSimulacao = async (simulacao) => {
   }
 };
 
+export const deleteDepartment = async (id) => {
+  try {
+    const response = await api.delete(`/departamentos/${id}`)
+    return response.data
+  } catch (error) {
+    console.error(error)
+  }
+}
+
 // Excluir simulação por ID
 export const deleteSimulacao = async (simulacaoId) => {
   try {

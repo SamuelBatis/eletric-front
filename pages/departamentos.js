@@ -175,10 +175,10 @@ export default function Departamentos() {
   const handleDeleteDepartment = async (departmentId) => {
     try {
       await deleteDepartment(departmentId);
-      
+
       const departmentsData = await fetchDepartments();
       const machinesData = await fetchMachines();
-  
+
       // Organize as máquinas em seus respectivos departamentos
       const departmentsWithMachines = departmentsData.map((department) => {
         const machines = machinesData.filter(
@@ -189,7 +189,7 @@ export default function Departamentos() {
           machines: machines,
         };
       });
-  
+
       setDepartments(departmentsWithMachines);
     } catch (error) {
       // Trate o erro de exclusão do departamento
@@ -212,7 +212,8 @@ export default function Departamentos() {
           Departamentos
         </Heading>
 
-        {departments.map((department, departmentIndex) => (
+        {departments?.map((department, departmentIndex) => (
+
           <Box key={departmentIndex} p={4} borderWidth={1} borderRadius="md" mb={4}>
             <HStack justify="space-between">
               <Heading as="h2" size="md" mb={2}>
@@ -227,7 +228,7 @@ export default function Departamentos() {
             </HStack>
             <Text>Máquinas:</Text>
             <HStack align="start" spacing={4} mt={2} flexWrap="wrap">
-              {department.machines.map((machine) => (
+              {department.machines?.map((machine) => (
                 <Box
                   key={machine.idMaquinas}
                   borderWidth={1}
