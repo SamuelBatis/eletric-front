@@ -17,6 +17,7 @@ import {
   FormLabel,
   Input,
   IconButton,
+  useShortcut,
 } from "@chakra-ui/react";
 import { AddIcon, DeleteIcon } from "@chakra-ui/icons";
 import {
@@ -42,6 +43,14 @@ export default function Departamentos() {
   const [departments, setDepartments] = useState([]);
   const [userData, setUserData] = useState();
   const [totalCostByDepartment, setTotalCostByDepartment] = useState([]);
+  const [indexDepartamentValue, setIndexDepartamentValue] = useState("");
+  const [newDepartment, setNewDepartment] = useState(false)
+
+
+  const handleWithOpenModalAndSetIndexValue = (index) => {
+    setMachineModalOpen(true);
+    setIndexDepartamentValue(index);
+  } 
 
 
   useEffect(() => {
@@ -100,6 +109,61 @@ export default function Departamentos() {
     fetchData();
     getUserInfos();
   }, []);
+  useEffect(() => {
+    const getUserInfos = async () => {
+      try {
+        const token = sessionStorage.getItem("token");
+        const userId = decodedToken(token);
+        const user = await findUser(userId);
+        setUserData(userId);
+      } catch (error) {
+        // Handle error
+      }
+    };
+  
+    const fetchData = async () => {
+      try {
+        const departmentsData = await fetchDepartments();
+        const machinesData = await fetchMachines();
+  
+        // Organize the machines into their respective departments
+        const departmentsWithMachines = departmentsData.map((department) => {
+          const machines = machinesData.filter(
+            (machine) => machine.idDepartamento === department.idDepartamento
+          );
+          const totalCost = machines.reduce(
+            (accumulator, machine) => accumulator + parseFloat(machine.custoTotal),
+             0
+          );
+          return {
+            ...department,
+            machines: machines,
+            totalCost: totalCost.toFixed(2),
+          };
+        });
+  
+        setDepartments(departmentsWithMachines);
+  
+        // Calculate the total costs by department
+        const totalCostByDepartment = departmentsWithMachines.reduce(
+          (accumulator, department) => {
+            return {
+              ...accumulator,
+              [department.idDepartamento]: department.totalCost,
+            };
+          },
+          {}
+        );
+  
+        setTotalCostByDepartment(totalCostByDepartment);
+      } catch (error) {
+        // Handle error fetching data
+      }
+    };
+  
+    fetchData();
+    getUserInfos();
+  }, [newDepartment]);
 
   const handleDeleteMachine = async (departmentIndex, machineId) => {
     try {
@@ -131,8 +195,8 @@ export default function Departamentos() {
     }
   };
 
-  const handleAddMachine = async (departmentIndex) => {
-    const department = departments[departmentIndex];
+  const handleAddMachine = async () => {
+    const department = departments[indexDepartamentValue];
     const newMachine = {
       nome: newMachineName,
       power: Number(newMachineVoltage).toFixed(1),
@@ -152,6 +216,7 @@ export default function Departamentos() {
       setNewMachineName("");
       setNewMachineVoltage("");
       setNewMachineUsageTime("");
+      setNewDepartment(!newDepartment)
     } catch (error) {
       // Handle error creating machine
     }
@@ -167,6 +232,7 @@ export default function Departamentos() {
       setDepartments([...departments, newDepartment]);
       setDepartmentModalOpen(false);
       setNewDepartmentName("");
+      setNewDepartment(!newDepartment)
     } catch (error) {
       // Handle error creating department
     }
@@ -268,7 +334,7 @@ export default function Departamentos() {
               mt={4}
               colorScheme="blue"
               size="sm"
-              onClick={() => setMachineModalOpen(true)}
+              onClick={() => handleWithOpenModalAndSetIndexValue(departmentIndex)}
             >
               Adicionar Máquina
             </Button>
@@ -322,7 +388,7 @@ export default function Departamentos() {
               <Button
                 colorScheme="blue"
                 mr={3}
-                onClick={() => handleAddMachine(departments[0].idDepartamento)} // Passe o id do departamento correto
+                onClick={() => handleAddMachine()} // Passe o id do departamento correto
               >
                 Adicionar
               </Button>
